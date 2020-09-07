@@ -82,9 +82,9 @@ showcommands!   Show git commands while executing them
 	# get base branch from current branch
 	local base=$(gitflow_config_get_base_branch $(git_current_branch))
 
-	# no base branch found, comparing against $master
+	# no base branch found, comparing against $main
 	if [ -z $base ]; then
-		base=$MASTER_BRANCH
+		base=$MAIN_BRANCH
 	fi
 
 	# Get the log

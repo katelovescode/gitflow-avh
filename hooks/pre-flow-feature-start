@@ -10,7 +10,7 @@
 #
 # The following variables are available as they are exported by git-flow:
 #
-# MASTER_BRANCH - The branch defined as Master
+# MAIN_BRANCH - The branch defined as Main
 # DEVELOP_BRANCH - The branch defined as Develop
 #
 NAME=$1

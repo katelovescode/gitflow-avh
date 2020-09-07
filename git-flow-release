@@ -49,7 +49,7 @@ _finish_from_develop() {
 
 	# Update local branches with remote branches
 	if flag fetch; then
-		git_fetch_branch "$ORIGIN" "$MASTER_BRANCH"
+		git_fetch_branch "$ORIGIN" "$MAIN_BRANCH"
 		git_fetch_branch "$ORIGIN" "$DEVELOP_BRANCH"
 	fi
 
@@ -57,21 +57,21 @@ _finish_from_develop() {
 	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
 	fi
-	if git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
-		if flag ff_master; then
-			git_compare_refs "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
+	if git_remote_branch_exists "$ORIGIN/$MAIN_BRANCH"; then
+		if flag ff_main; then
+			git_compare_refs "$MAIN_BRANCH" "$ORIGIN/$MAIN_BRANCH"
 			compare_refs_result=$?
 
 			if [ $compare_refs_result -gt 0 ]; then
-				warn "Branches '"$MASTER_BRANCH"' and '"$ORIGIN/$MASTER_BRANCH"' have diverged."
+				warn "Branches '"$MAIN_BRANCH"' and '"$ORIGIN/$MAIN_BRANCH"' have diverged."
 				if [ $compare_refs_result -eq 1 ]; then
-					warn "Fast forwarding '"$MASTER_BRANCH"'."
-					git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
-					git_do merge  --ff-only "$ORIGIN/$MASTER_BRANCH" >/dev/null 2>&1
+					warn "Fast forwarding '"$MAIN_BRANCH"'."
+					git_do checkout "$MAIN_BRANCH" || die "Could not check out branch '$MAIN_BRANCH'."
+					git_do merge  --ff-only "$ORIGIN/$MAIN_BRANCH" >/dev/null 2>&1
 					merge_result=$?
 					git_do checkout "$BRANCH"
 					if [ $merge_result -gt 0 ]; then
-						die "'"$MASTER_BRANCH"' can not be fast forwarded."
+						die "'"$MAIN_BRANCH"' can not be fast forwarded."
 					fi
 				elif [ $compare_refs_result -eq 2 ]; then
 					# Warn here, since there is no harm in being ahead
@@ -81,7 +81,7 @@ _finish_from_develop() {
 				fi
 			fi
 		else
-			require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
+			require_branches_equal "$MAIN_BRANCH" "$ORIGIN/$MAIN_BRANCH"
 		fi
 	fi
 	if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
@@ -99,11 +99,11 @@ _finish_from_develop() {
 
 	run_pre_hook "$VERSION_PREFIX$TAGNAME" "$ORIGIN" "$BRANCH"
 
-	# Try to merge into master.
+	# Try to merge into main.
 	# In case a previous attempt to finish this release branch has failed,
-	# but the merge into master was successful, we skip it now
-	if ! git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH"; then
-			git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
+	# but the merge into main was successful, we skip it now
+	if ! git_is_branch_merged_into "$BRANCH" "$MAIN_BRANCH"; then
+			git_do checkout "$MAIN_BRANCH" || die "Could not check out branch '$MAIN_BRANCH'."
 
 			opts=""
 			noflag edit && opts="$opts --no-edit"
@@ -111,7 +111,7 @@ _finish_from_develop() {
 				git_do merge --no-ff $opts "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
 			else
 				git_do merge --squash $opts "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
-				flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$MASTER_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
+				flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$MAIN_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
 				git_do commit $opts
 			fi
 	fi
@@ -121,7 +121,7 @@ _finish_from_develop() {
 		# In case a previous attempt to finish this release branch has failed,
 		# but the tag was set successful, we skip it now
 		if ! git_tag_exists "$VERSION_PREFIX$TAGNAME"; then
-			git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
+			git_do checkout "$MAIN_BRANCH" || die "Could not check out branch '$MAIN_BRANCH'."
 			if [ "$FLAGS_message" != "" ] && [ "$FLAGS_messagefile" != "" ]; then
 				die "Use either -m,--message or -f,--messagefile. Can not use both options at the same time"
 			fi
@@ -144,10 +144,10 @@ _finish_from_develop() {
 		fi
 	fi
 
-	# By default we backmerge the $MASTER_BRANCH unless the user explicitly
+	# By default we backmerge the $MAIN_BRANCH unless the user explicitly
 	# stated not to do a back merge, in that case we use the $BRANCH.
 	if noflag nobackmerge; then
-		merge_branch="$MASTER_BRANCH"
+		merge_branch="$MAIN_BRANCH"
 	else
 		merge_branch="$BRANCH"
 	fi
@@ -167,7 +167,7 @@ _finish_from_develop() {
 				if noflag notag; then
 					commit="$VERSION_PREFIX$TAGNAME"
 				else
-					commit="$MASTER_BRANCH"
+					commit="$MAIN_BRANCH"
 				fi
 				git_do merge --no-ff $opts "$commit" || die "There were merge conflicts." # TODO: What do we do now?
 			else
@@ -190,7 +190,7 @@ _finish_from_develop() {
 			git_do push "$ORIGIN" "$DEVELOP_BRANCH" || die "Could not push branch '$DEVELOP_BRANCH' to remote '$ORIGIN'."
 		fi
 		if flag pushproduction; then
-			git_do push "$ORIGIN" "$MASTER_BRANCH" || die "Could not push branch '$MASTER_BRANCH' to remote '$ORIGIN'."
+			git_do push "$ORIGIN" "$MAIN_BRANCH" || die "Could not push branch '$MAIN_BRANCH' to remote '$ORIGIN'."
 		fi
 		if noflag notag && flag pushtag; then
 			git_do push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
@@ -201,7 +201,7 @@ _finish_from_develop() {
 	if noflag keep; then
 
 		if [ "$BRANCH" = "$(git_current_branch)" ]; then
-			git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
+			git_do checkout "$MAIN_BRANCH" || die "Could not check out branch '$MAIN_BRANCH'."
 		fi
 
 		# Always delete remote first
@@ -235,11 +235,11 @@ _finish_from_develop() {
 	if flag fetch; then
 		echo "- Latest objects have been fetched from '$ORIGIN'"
 	fi
-	echo "- Release branch '$BRANCH' has been merged into '$MASTER_BRANCH'"
+	echo "- Release branch '$BRANCH' has been merged into '$MAIN_BRANCH'"
 	if noflag notag; then
 		echo "- The release was tagged '$VERSION_PREFIX$TAGNAME'"
 	fi
-	[ "$commit" = "$MASTER_BRANCH" ] && echo "- Master branch '$MASTER_BRANCH' has been back-merged into '$DEVELOP_BRANCH'"
+	[ "$commit" = "$MAIN_BRANCH" ] && echo "- Main branch '$MAIN_BRANCH' has been back-merged into '$DEVELOP_BRANCH'"
 	[ "$commit" = "$VERSION_PREFIX$TAGNAME" ] && echo "- Release tag '$VERSION_PREFIX$TAGNAME' has been back-merged into '$DEVELOP_BRANCH'"
 	[ "$commit" = "$BRANCH" ] && echo "- Release branch '$BRANCH' has been merged into '$DEVELOP_BRANCH'"
 
@@ -263,7 +263,7 @@ _finish_from_develop() {
 	echo "- Release branch '$BRANCH' "$keepmsg
 
 	if flag push; then
-		echo "- '$DEVELOP_BRANCH', '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
+		echo "- '$DEVELOP_BRANCH', '$MAIN_BRANCH' and tags have been pushed to '$ORIGIN'"
 	fi
 	echo "- You are now on branch '$(git_current_branch)'"
 	echo
@@ -641,9 +641,9 @@ k,[no]keep          Keep branch after performing finish
 [no]keeplocal       Keep the local branch
 D,[no]force_delete  Force delete release branch after finish
 n,[no]tag           Don't tag this release
-b,[no]nobackmerge   Don't back-merge master, or tag if applicable, in develop
+b,[no]nobackmerge   Don't back-merge main, or tag if applicable, in develop
 S,[no]squash        Squash release during merge
-[no]ff-master       Fast forward master branch if possible
+[no]ff-main       Fast forward main branch if possible
 e,[no]edit          The --noedit option can be used to accept the auto-generated message on merging
 T,tagname!          Use given tag name
 nodevelopmerge!  Don't back-merge develop branch
@@ -663,10 +663,10 @@ nodevelopmerge!  Don't back-merge develop branch
 	DEFINE_boolean 'keeplocal' false "keep the local branch"
 	DEFINE_boolean 'force_delete' false "force delete release branch after finish" D
 	DEFINE_boolean 'notag' false "don't tag this release" n
-	DEFINE_boolean 'nobackmerge' false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
+	DEFINE_boolean 'nobackmerge' false "don't back-merge $MAIN_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
 	DEFINE_boolean 'squash' false "squash release during merge" S
 	DEFINE_boolean 'squash-info' false "add branch info during squash"
-	DEFINE_boolean 'ff-master' false "fast forward master branch if possible"
+	DEFINE_boolean 'ff-main' false "fast forward main branch if possible"
 	DEFINE_boolean 'edit' true "accept the auto-generated message on merging" e
 	DEFINE_string  'tagname' "" "use the given tag name" T
 	DEFINE_boolean 'nodevelopmerge' false "don't merge $BRANCH into $DEVELOP_BRANCH "
@@ -686,7 +686,7 @@ nodevelopmerge!  Don't back-merge develop branch
 	gitflow_override_flag_boolean   "release.finish.nobackmerge"    "nobackmerge"
 	gitflow_override_flag_boolean   "release.finish.squash"         "squash"
 	gitflow_override_flag_boolean   "release.finish.squash-info"    "squash_info"
-	gitflow_override_flag_boolean   "release.finish.ff-master"      "ff-master"
+	gitflow_override_flag_boolean   "release.finish.ff-main"      "ff-main"
 	gitflow_override_flag_string    "release.finish.signingkey"     "signingkey"
 	gitflow_override_flag_string    "release.finish.message"        "message"
 	gitflow_override_flag_string    "release.finish.messagefile"    "messagefile"
@@ -828,8 +828,8 @@ S,[no]squash 		Squash release during merge
 		die "Branch '$BRANCH' seems to be a git-flow branch. It's not allowed to release this directly."
 	fi
 
-	if [ "$BRANCH" = "$MASTER_BRANCH" ]; then
-		die "Can not release from the the master branch"
+	if [ "$BRANCH" = "$MAIN_BRANCH" ]; then
+		die "Can not release from the the main branch"
 	fi
 
 	require_branch "$BRANCH"
@@ -844,29 +844,29 @@ S,[no]squash 		Squash release during merge
 
 	# Update local branches with remote branches
 	if flag fetch; then
-		git_fetch_branch "$ORIGIN" "$MASTER_BRANCH"
+		git_fetch_branch "$ORIGIN" "$MAIN_BRANCH"
 	fi
 
 	# Check if the local branches have all the commits from the remote branches
 	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
 		require_branches_equal "$BRANCH" "$ORIGIN/$BRANCH"
 	fi
-	if git_remote_branch_exists "$ORIGIN/$MASTER_BRANCH"; then
-		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
+	if git_remote_branch_exists "$ORIGIN/$MAIN_BRANCH"; then
+		require_branches_equal "$MAIN_BRANCH" "$ORIGIN/$MAIN_BRANCH"
 	fi
 
 	run_pre_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
 
-	# Try to merge into master.
+	# Try to merge into main.
 	# In case a previous attempt to finish this release branch has failed,
-	# but the merge into master was successful, we skip it now
-	if ! git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH"; then
-			git_do checkout "$MASTER_BRANCH" || die "Could not check out branch '$MASTER_BRANCH'."
+	# but the merge into main was successful, we skip it now
+	if ! git_is_branch_merged_into "$BRANCH" "$MAIN_BRANCH"; then
+			git_do checkout "$MAIN_BRANCH" || die "Could not check out branch '$MAIN_BRANCH'."
 			if noflag squash; then
 				git_do merge --no-ff "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
 			else
 				git_do merge --squash "$BRANCH" || die "There were merge conflicts." # TODO: What do we do now?
-				flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$MASTER_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
+				flag squash_info && gitflow_create_squash_message "Merged release branch '$BRANCH'" "$MAIN_BRANCH" "$BRANCH" > "$DOT_GIT_DIR/SQUASH_MSG"
 				git_do commit
 			fi
 	fi
@@ -895,7 +895,7 @@ S,[no]squash 		Squash release during merge
 	run_post_hook "$VERSION_PREFIX$VERSION" "$ORIGIN" "$BRANCH"
 
 	if flag push; then
-		git_do push "$ORIGIN" "$MASTER_BRANCH" || die "Could not push branch '$MASTER_BRANCH' to remote '$ORIGIN'."
+		git_do push "$ORIGIN" "$MAIN_BRANCH" || die "Could not push branch '$MAIN_BRANCH' to remote '$ORIGIN'."
 		if noflag notag; then
 			git_do push --tags "$ORIGIN" || die "Could not push tags to remote '$ORIGIN'."
 		fi
@@ -906,13 +906,13 @@ S,[no]squash 		Squash release during merge
 	if flag fetch; then
 		echo "- Latest objects have been fetched from '$ORIGIN'"
 	fi
-	echo "- Branch '$BRANCH' has been merged into '$MASTER_BRANCH'"
+	echo "- Branch '$BRANCH' has been merged into '$MAIN_BRANCH'"
 	if noflag notag; then
 		echo "- The release was tagged '$VERSION_PREFIX$VERSION'"
 	fi
 
 	if flag push; then
-		echo "- '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
+		echo "- '$MAIN_BRANCH' and tags have been pushed to '$ORIGIN'"
 	fi
 	echo "- You are now on branch '$(git_current_branch)'"
 	echo
@@ -1088,7 +1088,7 @@ r,[no]remote     Delete remote branch
 		fi
 	fi
 
-	if ( git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH" && git_is_branch_merged_into "$BRANCH" "$BASE_BRANCH" ); then
+	if ( git_is_branch_merged_into "$BRANCH" "$MAIN_BRANCH" && git_is_branch_merged_into "$BRANCH" "$BASE_BRANCH" ); then
 		git_do branch -d "$BRANCH" || die "Could not delete the $BRANCH."
 		if flag remote; then
 			git_remote_branch_delete "$BRANCH"
@@ -1100,7 +1100,7 @@ r,[no]remote     Delete remote branch
 				git_remote_branch_delete "$BRANCH"
 			fi
 		else
-			die "Release branch '$BRANCH' has been not been merged in branch '$MASTER_BRANCH' and/or branch '$BASE_BRANCH'. Use -f to force the deletion."
+			die "Release branch '$BRANCH' has been not been merged in branch '$MAIN_BRANCH' and/or branch '$BASE_BRANCH'. Use -f to force the deletion."
 		fi
 	fi
 

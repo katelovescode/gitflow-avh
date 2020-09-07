@@ -2,10 +2,10 @@
 
 # git-flow make-less installer for *nix systems, by Rick Osborne
 # Based on the git-flow core Makefile:
-# http://github.com/petervanderdoes/gitflow-avh/blob/master/Makefile
+# https://github.com/katelovescode/gitflow-avh/blob/main/Makefile
 
 # Licensed under the same restrictions as git-flow:
-# http://github.com/petervanderdoes/gitflow-avh/blob/develop/LICENSE
+# https://github.com/katelovescode/gitflow-avh/blob/develop/LICENSE
 
 # Updated for the fork at petervanderdoes
 
@@ -79,7 +79,7 @@ install)
 	case "$2" in
 	stable)
 		cd "$REPO_NAME"
-		git checkout master
+		git checkout main
 		cd "$OLDPWD"
 		;;
 	develop)
