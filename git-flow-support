@@ -73,7 +73,7 @@ h,help!           Show this help
 v,verbose         Verbose (more) output
 "
 	local support_branches current_branch width branch len
-	local base master_sha branch_sha
+	local base main_sha branch_sha
 	local tagname nicename
 
 	# Define flags
@@ -103,8 +103,8 @@ v,verbose         Verbose (more) output
 	width=$(($width+3-${#PREFIX}))
 
 	for branch in $support_branches; do
-		base=$(git merge-base "$branch" "$MASTER_BRANCH")
-		master_sha=$(git rev-parse "$MASTER_BRANCH")
+		base=$(git merge-base "$branch" "$MAIN_BRANCH")
+		main_sha=$(git rev-parse "$MAIN_BRANCH")
 		branch_sha=$(git rev-parse "$branch")
 		if [ "$branch" = "$current_branch" ]; then
 			printf "* "
@@ -113,7 +113,7 @@ v,verbose         Verbose (more) output
 		fi
 		if flag verbose; then
 			printf "%-${width}s" "${branch#$PREFIX}"
-			if [ "$branch_sha" = "$master_sha" ]; then
+			if [ "$branch_sha" = "$main_sha" ]; then
 				printf "(no commits yet)"
 			else
 				tagname=$(git name-rev --tags --no-undefined --name-only "$base")
@@ -186,7 +186,7 @@ F,[no]fetch       Fetch from origin before performing finish
 		git_fetch_branch "$ORIGIN" "$BASE"
 	fi
 
-	git_is_ancestor "$BASE" "$MASTER_BRANCH" || die "Given base '$BASE' is not a valid commit on '$MASTER_BRANCH'."
+	git_is_ancestor "$BASE" "$MAIN_BRANCH" || die "Given base '$BASE' is not a valid commit on '$MAIN_BRANCH'."
 
 	require_branch_absent "$BRANCH"
 

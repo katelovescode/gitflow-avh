@@ -107,7 +107,7 @@ file=     Use given config file
 	# Parse arguments
 	parse_args "$@"
 
-	output=$(git config $gitflow_config_option --get gitflow.branch.master)
+	output=$(git config $gitflow_config_option --get gitflow.branch.main)
 	echo "Branch name for production releases: $output "
 
 	output=$(git config $gitflow_config_option --get gitflow.branch.develop)
@@ -158,8 +158,8 @@ file=     Use given config file
 	value=$2
 
 	case $OPTION in
-	master)
-		cfg_option="gitflow.branch.master"
+	main)
+		cfg_option="gitflow.branch.main"
 		txt="Branch name for production releases"
 		;;
 	develop)
@@ -201,7 +201,7 @@ file=     Use given config file
 
 	[ -n "$value" ] || die_help "No value given"
 
-	if [ $OPTION = "master" ]; then
+	if [ $OPTION = "main" ]; then
 		develop_branch=$(git config --get gitflow.branch.develop)
 		if [ "$value" = $develop_branch ]; then
 			die "Production and \"next release\" branch should differ."
@@ -215,8 +215,8 @@ file=     Use given config file
 	fi
 
 	if [ $OPTION = "develop" ]; then
-		master_branch=$(git config --get gitflow.branch.master)
-		if [ "$value" = $master_branch ]; then
+		main_branch=$(git config --get gitflow.branch.main)
+		if [ "$value" = $main_branch ]; then
 			die "Production and \"next release\" branch should differ."
 		fi
 
